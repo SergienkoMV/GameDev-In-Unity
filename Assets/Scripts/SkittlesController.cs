@@ -21,10 +21,8 @@ public class SkittlesController : MonoBehaviour
     {
         for (int i = 0; i < _skittles.Length; i++)
         {
-            print(i);
             if (_skittles[i].rotation != Quaternion.Euler(0, 0, 0))
             {
-                print(i);
                 _skittles[i].isKinematic = true;
                 _skittles[i].rotation = Quaternion.Euler(0, 0, 0);
                 _skittles[i].position = _startPositions[i] + Vector3.up * 50;

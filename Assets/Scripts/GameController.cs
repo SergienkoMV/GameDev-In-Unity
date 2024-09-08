@@ -1,28 +1,24 @@
 using System.Collections;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameController : MonoBehaviour
 {
+    private int _firstTryScore;
     private int _score = 0;
     private int _numberTry = 1;
+    private int _round = 0;
+    private int _maxRounds = 10;
+    private int[,] _roundsArray = new int[10, 2];
     private float _tryTime = 7f;
-    //private int _countSkittles;
-    //private int _tryThrow = 1;
     private float _mouseX;
     private float _sliderSpeed = 2.0f;
     private float _bonus;
     private bool _isRolling = false;
     private bool _forceSet = true;
-    //private Vector3 _startBallPosition;
-    private int _round = 0;
-    private int[,] _roundsArray = new int[10, 2];
 
-
-    //[SerializeField] GameObject _ballGameObject;
-    //[SerializeField] Transform[] _skittles;
     [SerializeField] private GameObject _currentBall;
     [SerializeField] private BallController _ballScript;
     [SerializeField] private GameObject[] _balls;
@@ -32,26 +28,20 @@ public class GameController : MonoBehaviour
     [SerializeField] private Slider _throwForce;
     [SerializeField] private TextMeshProUGUI _TryLable;
     [SerializeField] private TextMeshProUGUI _roundLable;
-    [SerializeField] private TMP_Dropdown _ballsChoosen;
+    [SerializeField] private TMP_Dropdown _ballsСhoice;
     [SerializeField] private GameObject _menu;
-
-    //public int Score => _score;
-
-    //public int Turn => _numberTry;
 
     public bool IsRolling { get => _isRolling; set => _isRolling = value; }
 
     void Start()
     {
         SetNextRound(1);
-        //NextRound();
         _ballScript = _currentBall.GetComponent<BallController>();
     }
 
     void Update()
-    {
-        //выбираем шар
-        if (!_isRolling) 
+    {      
+        if (!_isRolling && _round <= _maxRounds) 
         {
             MoveSlider();
 
@@ -64,7 +54,7 @@ public class GameController : MonoBehaviour
                 if (!_menu.activeSelf)
                 {
                     _menu.SetActive(true);
-                    BallChoosen();
+                    Time.timeScale = 0;
                 }
                 else
                 {
@@ -77,22 +67,25 @@ public class GameController : MonoBehaviour
             {
                 StartCoroutine(GameProcess());
             }
+
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                RestartScene();
+            }
         } 
     }
 
     IEnumerator GameProcess()
     {
         _isRolling = true;
-        _ballScript.ThrowBall(_throwForce.value); //добавить вращение экрана и бросать шар туда, куда смотрит экран
-        yield return new WaitForSeconds(_tryTime);
-        print(_skittlesScript.CountStandSkittles());
-        _ballScript.BallReturn();
-        CountScore();
+        _ballScript.ThrowBall(_throwForce.value);
+        yield return new WaitForSeconds(6);
+        CountScore();      
         SetNextTry();
         _isRolling = false;
     }
 
-    private int CountScore() //подсчет очков
+    private int CountScore()
     {
         if (_round > 2)
         {
@@ -114,42 +107,17 @@ public class GameController : MonoBehaviour
         }
         
         _roundsArray[_round-1, 0] += _skittlesScript.CountStandSkittles();
-
         _score = _score + _skittlesScript.CountStandSkittles();
-        print("Score: " + _score.ToString());
-        if (_round > 2)
-        {
-            print($"Round {_round - 2} - {_roundsArray[_round - 3, 0]}");
-        }
-        if (_round > 1)
-        {
-            print($"Round {_round - 1} - {_roundsArray[_round - 2, 0]}");
-        }
-        print($"Round {_round} - {_roundsArray[_round-1, 0]}");
-
         _scoreLable.text = "Score: " + _score.ToString();
-        
         return _score;
     }
 
-    private GameObject BallChoosen() //выбор шара
+    public void BallСhoice()
     {
-        Time.timeScale = 0;
-        //_currentBall = _balls[2];
+        _currentBall.SetActive(false);
+        _currentBall = _balls[_ballsСhoice.value];
+        _currentBall.SetActive(true);
         _ballScript = _currentBall.GetComponent<BallController>();
-        return GetComponent<GameObject>(); 
-    }
-
-    private void ShowMessage(string message)
-    {
-        StartCoroutine(Message(message));
-    }
-
-    IEnumerator Message(string message)
-    {
-        _messageLable.text = message;
-        yield return new WaitForSeconds(10);
-        _messageLable.text = "";
     }
 
     private void MoveSlider()
@@ -174,29 +142,40 @@ public class GameController : MonoBehaviour
 
     private void SetNextTry()
     {
-        if (_skittlesScript.CountStandSkittles() == 10)
+        if (_skittlesScript.CountStandSkittles() + _firstTryScore == 10)
         {
             if (_numberTry == 1)
             {
-                ShowMessage("STRIKE");
+                StartCoroutine(Message("STRIKE"));
                 _roundsArray[_round - 1, 1] = 2;
                 SetNextRound(1);
             }
             else
             {
-                ShowMessage("SPARE");
+                print("kfjgklsdj");
+                StartCoroutine(Message("SPARE"));
                 _roundsArray[_round - 1, 1] = 1;
                 SetNextRound(1);
+                _firstTryScore = 0;
             }
         }
         else if (_numberTry == 1)
         {
+            _firstTryScore = _skittlesScript.CountStandSkittles();
             SetNextRound(2);
         }
         else
         {
+            _firstTryScore = 0;
             SetNextRound(1);
-        }
+            }
+    }
+
+    IEnumerator Message(string message)
+    {
+        _messageLable.text = message;
+        yield return new WaitForSeconds(3);
+        _messageLable.text = "";
     }
 
     private void SetNextRound(int numberTry)
@@ -212,11 +191,32 @@ public class GameController : MonoBehaviour
         {
             _skittlesScript.SkittlesClear();
         }
+        _ballScript.BallReturn();
     }
 
     private void NextRound()
     {
         _round++;
-        _roundLable.text = "Round: " + _round;
+        if (_round > _maxRounds)
+        {
+            StopAllCoroutines();
+            StartCoroutine(Message("Game Over"));
+            StartCoroutine(GameOver());
+        }
+        else
+        {
+            _roundLable.text = "Round: " + _round;
+        }
+    }
+
+    private void RestartScene()
+    {
+        SceneManager.LoadScene(0);
+    }
+
+    IEnumerator GameOver()
+    {
+        yield return new WaitForSeconds(_tryTime);
+        RestartScene();
     }
 }
