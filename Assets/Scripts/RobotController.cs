@@ -11,18 +11,19 @@ using static UnityEngine.UI.GridLayoutGroup;
 public class RobotController : MonoBehaviour
 {
     [SerializeField] private float _speed = 10f;
-    [SerializeField] private float _range = 1f;
+    [SerializeField] private float _hitRrange = 1f;
     [SerializeField] private int _angleRotation = 90;
     [SerializeField] private float _rotationSpeed = 200f;
     [SerializeField] private float _radius = 1.5f;
     [SerializeField] private LayerMask _targetMask;
     private int _action = 1;
-    private float _angel;
+    private float _objectiveAngel;
     private int sideRotation;
     int x = 2; //удалить
     private Vector3 _previousePosition;
-    private float _deltaTime = 2f;
-    private float _nextTime;
+    private float _downtime = 1f;
+    private float _delayTime;
+    
 
 
     //iv.Двигается по комнате, избегая столкновений с препятствиями.
@@ -30,40 +31,32 @@ public class RobotController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        _range += transform.localScale.x / 2;
-        _angel = transform.eulerAngles.y;
+        _hitRrange = transform.localScale.x * 0.6f;
+        _objectiveAngel = transform.eulerAngles.y;
         _previousePosition = transform.position;
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (_action == 1)
         {
-            _nextTime += Time.deltaTime;
-           
-
-            transform.Rotate(Vector3.zero);
+            _delayTime += Time.deltaTime;
             //ii.Использует Raycast для обнаружения препятствий впереди, слева и справа от робота.
             Ray rayForward = new Ray(transform.position, transform.forward);
+            Debug.DrawRay(transform.position, transform.forward * 0.6f);
             Ray rayLeft = new Ray(transform.position, -transform.right);
+            Debug.DrawRay(transform.position, -transform.right * 0.7f);
             Ray rayRight = new Ray(transform.position, transform.right);
+            Debug.DrawRay(transform.position, transform.right * 0.7f);
 
-            //print(transform.eulerAngles.y);
             RaycastHit hit;
-            //if (Physics.Raycast(rayForward, out hit, _range))
-            //{
-            //    print("препятствие:" + hit.collider.name);
-            //}
-            
-            if (!Physics.Raycast(rayForward, out hit, _range))
+          
+            if (!Physics.Raycast(rayForward, out hit, _hitRrange))
             {
                 //i.Реализует движение робота с заданной скоростью.
-                
                 MoveRobot(_speed);
-                if (_nextTime >= _deltaTime)
+                if (_delayTime >= _downtime)
                 {
-                    
                     if(Mathf.Abs(Mathf.Abs(transform.position.x) - Mathf.Abs(_previousePosition.x)) <= 0.01 && Mathf.Abs((Mathf.Abs(transform.position.z) - Mathf.Abs(_previousePosition.z))) <= 0.01)
                     {
                         float xCurrent = Mathf.Abs(transform.position.x);
@@ -76,58 +69,41 @@ public class RobotController : MonoBehaviour
                         float zDelta = Mathf.Abs(transform.position.z) - Mathf.Abs(_previousePosition.z);
                         print(xDelta + " " + zDelta);
                         print("Somthing in front");
-                        _action = Random.Range(1, 2);
-                        SetupDirection(_action);
-
+                        int _side = Random.Range(0, 3);
+                        print(_side);
+                        _action = SetupDirection(_side);
                     }
-                    _nextTime = 0;
+                    _delayTime = 0;
                     _previousePosition = transform.position;
                 }
-
-                //if ((transform.position.x + 0.01 <= _previousePosition.x || transform.position.x - 0.01 >= _previousePosition.x) &&
-                //(Mathf.Abs(transform.position.x) + 0.01 <= _previousePosition.z || Mathf.Abs(transform.position.x) + 0.01 >= _previousePosition.z))
-                //{
-                    
-                //}
             } 
 
             else
             {
                 print("препятствие");
-                if (!Physics.Raycast(rayRight, _range)) //сделать рандомным выбор стороны rayLeft определить раньше и заменить на абстрактную переменную
+                if (Physics.Raycast(rayRight, _hitRrange + 0.1f))
                 {
                     print(1);
-                    //_angel += _angleRotation;
-                    //_action = 2;
-                    //sideRotation = 1;
-                    _action = SetupDirection(1);
-                }
-                else//(!Physics.Raycast(rayLeft, _range))
-                {
-                    print(2);
-                    //_angel -= _angleRotation;
-                    //_action = 2;
-                    //sideRotation = -1;
                     _action = SetupDirection(2);
                 }
-                //if (Physics.Raycast(rayLeft, _range) && Physics.Raycast(rayRight, _range))
-                //{
-                //    print(3);
-                //    _angel = transform.eulerAngles.y + _angleRotation * 2;
-                //    sideRotation = 1;
-                //    //RotateRobot(3);
-                //    //Отъехать и попробовать повернуть и так много раз.
-                //}
-                //_action = 2;
-            }
-            
+                else if(Physics.Raycast(rayLeft, _hitRrange + 0.1f))
+                {
+                    print(2);
+                    _action = SetupDirection(1);
+                }
+                else
+                {
+                    print(3);
+                    _action = SetupDirection(Random.Range(1, 3));
+                }
+            }  
         }
         else
         {
             //iii.Изменяет направление движения робота, если обнаруживает препятствие.
             RotateRobot(sideRotation);
         }
-        FindGarbage();
+        //FindGarbage();
     }
 
 
@@ -140,12 +116,12 @@ public class RobotController : MonoBehaviour
     {
         if (_action == 1)
         {
-            _angel += _angleRotation;
+            _objectiveAngel += _angleRotation;
             sideRotation = 1;
         }
         else
         {
-            _angel -= _angleRotation;
+            _objectiveAngel -= _angleRotation;
             sideRotation = -1;
         }
         return _action = 2;
@@ -154,61 +130,35 @@ public class RobotController : MonoBehaviour
     private void RotateRobot(int side)
     {
         MoveRobot(0f);
-        //gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
         if (side == 1)
         {
             
-            if (_angel >= 360 && transform.eulerAngles.y <= 90)
+            if (_objectiveAngel >= 360 && transform.eulerAngles.y <= 90)
             {
-                _angel -= 360;
+                _objectiveAngel -= 360;
             }
-            if (transform.eulerAngles.y <= _angel)
+            if (transform.eulerAngles.y <= _objectiveAngel)
             {
-                print(_angel + " + " + transform.eulerAngles.y);
                 transform.Rotate(Vector3.up * _rotationSpeed * Time.deltaTime * side);
-                //gameObject.GetComponent<Rigidbody>().AddTorque(Vector3.up * _speed * Time.deltaTime);
             }
             else
             {
-                transform.eulerAngles = new Vector3(0, _angel, 0);
-                print(_angel + " установили " + transform.eulerAngles.y);
+                transform.eulerAngles = new Vector3(0, _objectiveAngel, 0);
                 _action = 1;
             }
-            //if (transform.eulerAngles.y >= 270) 
-            //{
-
-            //}
-            //else
-            //{
-            //    if (transform.eulerAngles.y <= _angel)
-            //    {
-            //        print(_angel + " + " + transform.eulerAngles.y);
-            //        transform.Rotate(Vector3.up * _rotationSpeed * Time.deltaTime * side);
-            //        //gameObject.GetComponent<Rigidbody>().AddTorque(Vector3.up * _speed * Time.deltaTime);
-            //    }
-            //    else
-            //    {
-            //        transform.eulerAngles = new Vector3(0, _angel, 0);
-            //        print(_angel + " установили " + transform.eulerAngles.y);
-            //        _action = 1;
-            //    }
-            //}
         } else
         {
-            if (_angel <= 0 && transform.eulerAngles.y >= 270)
+            if (_objectiveAngel <= 0 && transform.eulerAngles.y >= 270)
             {
-                _angel += 360;
+                _objectiveAngel += 360;
             }
-            if (transform.eulerAngles.y >= _angel)
+            if (transform.eulerAngles.y >= _objectiveAngel)
             {
-                print(_angel + " + " + transform.eulerAngles.y);
                 transform.Rotate(Vector3.up * _rotationSpeed * Time.deltaTime * side);
-                //gameObject.GetComponent<Rigidbody>().AddTorque(Vector3.up * _speed * Time.deltaTime);
             }
             else
             {
-                transform.eulerAngles = new Vector3(0, _angel, 0);
-                print(_angel + " установили " + transform.eulerAngles.y);
+                transform.eulerAngles = new Vector3(0, _objectiveAngel, 0);
                 _action = 1;
             }
         }
@@ -220,7 +170,7 @@ public class RobotController : MonoBehaviour
         //Garbage[] _garbege = FindObjectsOfType<Garbage>();
         //ComponentSearcher<Garbege>.InRadius(currentPosition, searchRadius, out componentsInRange); ;
 
-        Collider[] collidersForCheck = Physics.OverlapSphere(transform.position + transform.forward * _range, _radius, _targetMask);
+        Collider[] collidersForCheck = Physics.OverlapSphere(transform.position + transform.forward * _hitRrange, _radius, _targetMask);
         if (collidersForCheck.Length > 0)
         {
             //print("Garbage finded");
@@ -235,8 +185,8 @@ public class RobotController : MonoBehaviour
     {
         if (other.gameObject.GetComponent<Garbage>())
         {
-            Destroy(other.gameObject);
-            //other.GetComponent<Garbage>().GarbageCollect(transform.position);
+            //Destroy(other.gameObject);
+            other.GetComponent<Garbage>().GarbageCollect(transform.position);
         }
     }
 }
