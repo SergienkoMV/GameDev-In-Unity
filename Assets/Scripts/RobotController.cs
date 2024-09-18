@@ -1,12 +1,4 @@
-using System.Collections.Generic;
-using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Net.NetworkInformation;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
-using static UnityEngine.UI.GridLayoutGroup;
 
 public class RobotController : MonoBehaviour
 {
@@ -19,7 +11,6 @@ public class RobotController : MonoBehaviour
     private int _action = 1;
     private float _objectiveAngel;
     private int sideRotation;
-    int x = 2; //удалить
     private Vector3 _previousePosition;
     private float _downtime = 1f;
     private float _delayTime;
@@ -28,7 +19,6 @@ public class RobotController : MonoBehaviour
 
     //iv.Двигается по комнате, избегая столкновений с препятствиями.
 
-    // Start is called before the first frame update
     void Start()
     {
         _hitRrange = transform.localScale.x * 0.6f;
@@ -80,20 +70,16 @@ public class RobotController : MonoBehaviour
 
             else
             {
-                print("препятствие");
                 if (Physics.Raycast(rayRight, _hitRrange + 0.1f))
                 {
-                    print(1);
                     _action = SetupDirection(2);
                 }
                 else if(Physics.Raycast(rayLeft, _hitRrange + 0.1f))
                 {
-                    print(2);
                     _action = SetupDirection(1);
                 }
                 else
                 {
-                    print(3);
                     _action = SetupDirection(Random.Range(1, 3));
                 }
             }  
@@ -103,7 +89,6 @@ public class RobotController : MonoBehaviour
             //iii.Изменяет направление движения робота, если обнаруживает препятствие.
             RotateRobot(sideRotation);
         }
-        //FindGarbage();
     }
 
 
@@ -164,42 +149,11 @@ public class RobotController : MonoBehaviour
         }
     }
 
-    private void FindGarbage()
-    {
-
-        //Garbage[] _garbege = FindObjectsOfType<Garbage>();
-        //ComponentSearcher<Garbege>.InRadius(currentPosition, searchRadius, out componentsInRange); ;
-
-        Collider[] collidersForCheck = Physics.OverlapSphere(transform.position + transform.forward * _hitRrange, _radius, _targetMask);
-        if (collidersForCheck.Length > 0)
-        {
-            //print("Garbage finded");
-            for (int i = 0; i < collidersForCheck.Length; i++)
-            {
-                //collidersForCheck[i].GetComponent<Garbage>().GarbageCollect();
-            }
-        }
-    }
-
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.GetComponent<Garbage>())
         {
-            //Destroy(other.gameObject);
             other.GetComponent<Garbage>().GarbageCollect(transform.position);
         }
     }
 }
-
-//var _angel = transform.eulerAngles.y + _angleRotation;
-//if (transform.eulerAngles.y <= _angel)
-//{
-//    print(transform.eulerAngles.y);
-//    transform.Rotate(Vector3.up * _rotationSpeed);
-//    //gameObject.GetComponent<Rigidbody>().AddTorque(Vector3.up * _speed * Time.deltaTime);
-//    //int x = 1;
-//    //if (x == 2) 
-//    //{
-//    //    yield return null;
-//    //}
-//}
