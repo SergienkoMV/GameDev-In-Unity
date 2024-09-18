@@ -49,19 +49,7 @@ public class RobotController : MonoBehaviour
                 {
                     if(Mathf.Abs(Mathf.Abs(transform.position.x) - Mathf.Abs(_previousePosition.x)) <= 0.01 && Mathf.Abs((Mathf.Abs(transform.position.z) - Mathf.Abs(_previousePosition.z))) <= 0.01)
                     {
-                        float xCurrent = Mathf.Abs(transform.position.x);
-                        float xCPreviouse =  Mathf.Abs(_previousePosition.x);
-                        print(xCurrent + " - " + xCPreviouse);
-                        float xDelta = Mathf.Abs(transform.position.x) - Mathf.Abs(_previousePosition.x);
-                        float zCurrent = Mathf.Abs(transform.position.z);
-                        float zCPreviouse = Mathf.Abs(_previousePosition.z);
-                        print(zCurrent + " - " + zCPreviouse);
-                        float zDelta = Mathf.Abs(transform.position.z) - Mathf.Abs(_previousePosition.z);
-                        print(xDelta + " " + zDelta);
-                        print("Somthing in front");
-                        int _side = Random.Range(0, 3);
-                        print(_side);
-                        _action = SetupDirection(_side);
+                        _action = SetupDirection(Random.Range(1, 3));
                     }
                     _delayTime = 0;
                     _previousePosition = transform.position;
