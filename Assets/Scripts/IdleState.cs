@@ -1,34 +1,33 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AI;
 
-public class IdleState : MonoBehaviour
+public class IdleState : AIState
 {
-    //Персонаж остается на месте.
-    [SerializeField] private float _maxTime = 6f;
-    private Animator _animator;
-    private NavMeshAgent _agent;
-    [SerializeField] private float _timer;
-   
 
-    void Start()
+    private float _timer;
+
+    public AIStateID GetID()
     {
-        _animator = GetComponent<Animator>();
-        _timer = _maxTime;
-
-
+        return AIStateID.Idle;
     }
 
-    void Update()
+    public void Enter(AIAgent agent)
     {
-        _timer += Time.deltaTime;
-        _animator.SetFloat("Timer", _timer);
+        _timer = agent.Config._maxTime;
+    }
 
-        if ( _timer > _maxTime)
+    public void Update(AIAgent agent)
+    {
+        _timer -= Time.deltaTime;
+        agent.Animator.SetFloat("Timer", _timer);
+
+        if (_timer < 0)
         {
-            _timer = 0;
-            //_agent.destination = transform.position;
+            agent.StateMachine.ChangeState(AIStateID.Search);
         }
+    }
+
+    public void Exit(AIAgent agent)
+    {
+
     }
 }

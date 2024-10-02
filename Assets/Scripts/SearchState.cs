@@ -1,30 +1,54 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
-using UnityEngine.AI;
 
-public class SearchState : MonoBehaviour
+//Персонаж перемещается по случайному маршруту с помощью NavMeshAgent, ища предметы.
+public class SearchState : AIState
 {
-    //Персонаж перемещается по случайному маршруту с помощью NavMeshAgent, ища предметы.
+    private Collider[] _hitCollider;
 
-    [SerializeField] private GameObject _goal;
-    NavMeshAgent agent;
-
-    void Start()
+    public AIStateID GetID()
     {
-        agent = GetComponent<NavMeshAgent>();
-        agent.destination = _goal.transform.position;
+        return AIStateID.Search;
     }
 
-    void Update()
+    public void Enter(AIAgent agent)
     {
+
+    }
+
+    public void Update(AIAgent agent)
+    {
+        if (!agent.NavMeshAgent.pathPending && agent.NavMeshAgent.remainingDistance < 0.5f)
+        {
+            if (agent.Pointers.Length != 0)
+            {
+                int _index = Random.Range(0, agent.Pointers.Length);
+                agent.NavMeshAgent.destination = agent.Pointers[_index].position;
+            }
+        }
+
         if (Input.GetMouseButton(0))
         {
             RaycastHit hit;
             if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100))
             {
-                agent.destination = hit.point;
+                agent.NavMeshAgent.destination = hit.point;
             }
         }
+
+        _hitCollider = Physics.OverlapSphere(agent.transform.position, agent.Config._searchDistance, agent.LayerMask);
+        if(_hitCollider.Length > 0)
+        {
+            agent.NavMeshAgent.destination = _hitCollider[0].transform.position;
+            agent.Item = _hitCollider[0].gameObject;
+            agent.StateMachine.ChangeState(AIStateID.Collect);
+        }
+    }
+
+    public void Exit(AIAgent agent)
+    {
+
     }
 }
