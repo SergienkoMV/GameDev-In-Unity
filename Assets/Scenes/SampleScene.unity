@@ -122,7 +122,7 @@ NavMeshSettings:
     preserveTilesOutsideBounds: 0
     debug:
       m_Flags: 0
-  m_NavMeshData: {fileID: 23800000, guid: cb3100822d1e5174182df7dd30b18409, type: 2}
+  m_NavMeshData: {fileID: 0}
 --- !u!1001 &72308036
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -227,7 +227,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 5.57
+  m_Radius: 1
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &72308040
 MonoBehaviour:
