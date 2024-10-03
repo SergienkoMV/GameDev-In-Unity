@@ -13,11 +13,12 @@ public class Bullet : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         _impactSound = GameObject.Find("HitSound").GetComponent<AudioSource>();
+        rb.AddForce(transform.forward * _speed, ForceMode.Impulse);
     }
 
     void Update()
     {
-        rb.AddForce(transform.forward, ForceMode.Impulse);
+        
     }
 
     private void OnCollisionEnter(Collision collision)
